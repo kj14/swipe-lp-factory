@@ -38,7 +38,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      padding: calc(10px + var(--safe-top)) 10px calc(10px + var(--safe-bottom)) 10px;
+      padding: calc(68px + var(--safe-top)) 10px calc(10px + var(--safe-bottom)) 10px;
       background: var(--bg-color, #000);
     }
 
@@ -125,13 +125,65 @@
     }
     .dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.25)}
     .dot.active{background:var(--accent)}
+
+    .header{
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: calc(10px + var(--safe-top)) 12px 10px 12px;
+      pointer-events: none;
+    }
+    .headerInner{
+      pointer-events: auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .brand{display:flex;align-items:center;gap:10px;min-width:0;}
+    .logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg, rgba(96,165,250,.95), rgba(29,78,216,.95)); box-shadow: 0 10px 24px rgba(29,78,216,.25);}
+    .brandText{min-width:0;}
+    .brandName{font-size:14px;font-weight:800;letter-spacing:.2px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .brandSub{font-size:11px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .nav{display:none;gap:10px;align-items:center;}
+    .navLink{color:rgba(255,255,255,.88);text-decoration:none;font-size:12px;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18)}
+    .headerRight{display:flex;align-items:center;gap:8px;}
+
+    @media (min-width: 860px){
+      .nav{display:flex;}
+    }
+
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <a class="pill" href="index.html">← home</a>
-    <div class="pill" id="counter">0/0</div>
-  </div>
+  <header class="header" id="header">
+    <div class="headerInner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="brandText">
+          <div class="brandName">Swipe LP Factory</div>
+          <div class="brandSub">mobile swipe landing</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#" class="navLink" data-nav="top">Top</a>
+        <a href="#" class="navLink" data-nav="about">About</a>
+        <a href="#" class="navLink" data-nav="contact">Contact</a>
+      </nav>
+      <div class="headerRight">
+        <div class="pill" id="counter">0/0</div>
+        <a class="pill primary" href="#cta" id="headerCta">相談する</a>
+      </div>
+    </div>
+  </header>
   <div class="progress" id="progress" aria-hidden="true"></div>
 
   <div class="viewport" id="viewport" aria-label="Swipe slides"></div>
@@ -191,6 +243,19 @@
       viewport.scrollTo({top: i * window.innerHeight, behavior:'smooth'});
     });
     progress.appendChild(d);
+  });
+
+
+  // Header nav -> snap to slide index
+  document.querySelectorAll('[data-nav]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const k = a.getAttribute('data-nav');
+      let target = 0;
+      if (k === 'about') target = Math.min(1, slides.length-1);
+      if (k === 'contact') target = slides.length-1;
+      viewport.scrollTo({top: target * window.innerHeight, behavior:'smooth'});
+    });
   });
 
   function setActive(){
