@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>/swipe demo</title>
+  <style>
+    :root{--bg:#0b0f14;--card:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--accent:#60a5fa;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text);}
+    .top{position:sticky;top:0;backdrop-filter: blur(10px);background:rgba(11,15,20,.7);border-bottom:1px solid #1f2937;}
+    .top .wrap{max-width:980px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .top a{color:var(--accent);text-decoration:none;font-size:14px}
+    .wrap{max-width:980px;margin:0 auto;padding:18px 16px;}
+    .stage{background:var(--card);border:1px solid #1f2937;border-radius:16px;overflow:hidden;}
+    .slide{display:none;padding:22px;min-height:52vh;}
+    .slide.active{display:block;}
+    h1{margin:0 0 10px;font-size:22px;}
+    p{margin:0;color:var(--muted);line-height:1.6;}
+    .img{margin-top:14px;background:#0b1220;border:1px dashed #334155;border-radius:14px;height:260px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;}
+    .ctrl{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px;}
+    button{appearance:none;border:1px solid #334155;background:#0b1220;color:var(--text);padding:10px 12px;border-radius:12px;font-size:14px;}
+    button.primary{background:#1d4ed8;border-color:#1d4ed8;}
+    button:disabled{opacity:.4}
+    .dots{display:flex;gap:6px;align-items:center;justify-content:center;flex:1;}
+    .dot{width:8px;height:8px;border-radius:50%;background:#334155;}
+    .dot.active{background:var(--accent)}
+    .cta{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="wrap">
+      <div>Swipe demo</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <a href="index.html">← home</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="stage" id="stage"></div>
+    <div class="ctrl">
+      <button id="prev">← Prev</button>
+      <div class="dots" id="dots"></div>
+      <button id="next" class="primary">Next →</button>
+    </div>
+    <div class="cta">
+      <button class="primary" id="cta">CTA: 今すぐ相談する（ダミー）</button>
+      <button id="copy">このスライド内容をコピー</button>
+    </div>
+  </div>
+
+<script>
+  // Minimal slide data (placeholder). Next: generate this from scenario JSON.
+  const slides = [
+    {title: 'スワイプLPは「スライド」だった', body: 'LPをスライドとして組み立てれば、画像生成と相性が良い。まずは最小の型に流し込む。', img: 'slides/01.jpg'},
+    {title: '打ち合わせ→3時間でLP', body: 'シナリオ→画像(7〜12枚)→テンプレ差し替えで公開。テイスト違いも複製してABテストへ。', img: 'slides/02.jpg'},
+    {title: '計測して勝ちパターンを固定', body: 'CTAクリック/到達率などを追い、勝ち案を固定→次の実験へ。週次レポも自動化。', img: 'slides/03.jpg'},
+    {title: 'まずはデモから', body: 'ここは雛形。画像はプレースホルダ。nanobanana生成画像に差し替えたら完成度が跳ねる。', img: 'slides/04.jpg'},
+  ];
+
+  const stage = document.getElementById('stage');
+  const dots = document.getElementById('dots');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const cta = document.getElementById('cta');
+  const copyBtn = document.getElementById('copy');
+
+  let idx = 0;
+
+  function render(){
+    stage.innerHTML = '';
+    dots.innerHTML = '';
+
+    slides.forEach((s,i)=>{
+      const el = document.createElement('section');
+      el.className = 'slide' + (i===idx?' active':'');
+      el.innerHTML = `
+        <h1>${s.title}</h1>
+        <p>${s.body}</p>
+        <div class="img">${s.img}（ここに画像が入る）</div>
+      `;
+      stage.appendChild(el);
+
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===idx?' active':'');
+      d.addEventListener('click',()=>{idx=i;render();});
+      dots.appendChild(d);
+    });
+
+    prev.disabled = idx===0;
+    next.disabled = idx===slides.length-1;
+  }
+
+  prev.addEventListener('click',()=>{ if(idx>0){idx--;render();}});
+  next.addEventListener('click',()=>{ if(idx<slides.length-1){idx++;render();}});
+
+  // Arrow keys
+  window.addEventListener('keydown',(e)=>{
+    if(e.key==='ArrowLeft') prev.click();
+    if(e.key==='ArrowRight') next.click();
+  });
+
+  cta.addEventListener('click',()=>{
+    console.log('cta_click', {idx});
+    alert('CTA clicked (dummy)');
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    const s = slides[idx];
+    const txt = `${s.title}\n\n${s.body}`;
+    try{
+      await navigator.clipboard.writeText(txt);
+      alert('Copied');
+    }catch(e){
+      alert(txt);
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Swipe LP Factory (Demo)</title>
+  <style>
+    :root{--bg:#0b0f14;--card:#111827;--text:#e5e7eb;--muted:#9ca3af;--accent:#60a5fa;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--text);}
+    header{padding:24px 20px; border-bottom:1px solid #1f2937;}
+    header h1{margin:0;font-size:20px;}
+    header p{margin:8px 0 0;color:var(--muted);font-size:14px;}
+    .wrap{max-width:960px;margin:0 auto;padding:20px;}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;}}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:12px;padding:16px;}
+    .card h2{margin:0 0 8px;font-size:16px;}
+    .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;}
+    a{color:var(--accent);text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .btn{display:inline-block;padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#0b1220;}
+    .btn.primary{background:#1d4ed8;border-color:#1d4ed8;color:white;}
+    footer{padding:18px 20px;color:var(--muted);font-size:12px;border-top:1px solid #1f2937;}
+    code{background:#0b1220;padding:2px 6px;border-radius:8px;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Swipe LP Factory (Demo)</h1>
+      <p>最小デモ: 「シナリオ/スライド」→「スワイプLP」出力。GitHub Pagesで配信。</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2>Swipe LP（デモ）</h2>
+        <p>とりあえず見れるもの。画像はプレースホルダ。後でnanobanana生成画像に差し替え予定。</p>
+        <div class="btns">
+          <a class="btn primary" href="swipe.html">/swipe を開く</a>
+          <a class="btn" href="docs-LIF-75.md">LIF-75 memo</a>
+          <a class="btn" href="docs-LIF-74.md">LIF-74 memo</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>次の一手（予定）</h2>
+        <p>
+          <ul>
+            <li>スライドJSONを入力にして自動レンダリング</li>
+            <li>画像差し替え: <code>slides/01.jpg</code> …</li>
+            <li>計測: CTA click / slide到達を最小実装</li>
+          </ul>
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      Repo: <span id="repo"></span>
+      <script>
+        document.getElementById('repo').textContent = 'swipe-lp-factory';
+      </script>
+    </div>
+  </footer>
+</body>
+</html>
