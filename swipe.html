@@ -427,21 +427,38 @@
       const bg = s.bg ? `url('${String(s.bg).replace(/'/g, "\\'")}')` : 'linear-gradient(135deg, #0b1220, #020617)';
       slide.style.setProperty('--bg-img', bg);
 
+      const title = String(s.title || '').trim();
+      const body = String(s.body || '').trim();
+      const eyebrow = String(s.eyebrow || '').trim();
+      const hasText = (title + body + eyebrow).length > 0;
+
+      const ctaHref = (s.cta && s.cta.href) ? String(s.cta.href).trim() : '';
+      const ctaLabel = (s.cta && s.cta.label) ? String(s.cta.label).trim() : '';
+      const showCta = ctaLabel.length > 0;
+
+      const showCard = hasText || showCta;
+
       slide.innerHTML = `
         <div class="overlay">
+          ${showCard ? `
           <div class="card">
-            <div class="eyebrow"><span class="dot"></span><span>${escapeHtml(s.eyebrow || 'Swipe')}</span></div>
-            <h1>${escapeHtml(s.title || '')}</h1>
-            <p>${escapeHtml(s.body || '')}</p>
+            ${hasText ? `
+            <div class="eyebrow"><span class="dot"></span><span>${escapeHtml(eyebrow || 'Swipe')}</span></div>
+            <h1>${escapeHtml(title)}</h1>
+            <p>${escapeHtml(body)}</p>
+            ` : ''}
+            ${showCta ? `
             <div class="actions">
-              <a class="btn primary" href="${escapeAttr((s.cta && s.cta.href) || '#cta')}" data-cta="1" data-idx="${i}">
-                ${escapeHtml((s.cta && s.cta.label) || '今すぐ相談する')}
+              <a class="btn primary" href="${escapeAttr(ctaHref || '#cta')}" data-cta="1" data-idx="${i}">
+                ${escapeHtml(ctaLabel)}
                 <span aria-hidden="true">→</span>
               </a>
               <button class="btn secondary" type="button" data-copy="1" data-idx="${i}">このスライド内容をコピー</button>
             </div>
+            ` : ''}
             <div class="hint">上にスワイプ / 下にスワイプ（キーボード：↑↓）</div>
           </div>
+          ` : ''}
         </div>
       `;
 
