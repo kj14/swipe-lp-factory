@@ -109,8 +109,9 @@
         var(--bg-img);
       background-size: var(--bg-fit, cover);
       background-position: center;
+      background-repeat: no-repeat;
       transform: translate3d(0, calc(var(--parallax-y, 0px) * .6), 0) scale(var(--bg-scale, 1.08));
-      filter: saturate(1.05) contrast(1.05);
+      filter: none;
       will-change: transform;
     }
 
@@ -428,6 +429,7 @@
       slide.style.setProperty('--bg-img', bg);
       const fit = (s.fit || '').toString().trim();
       if (fit) slide.style.setProperty('--bg-fit', fit);
+      if (fit === 'contain') slide.setAttribute('data-fit','contain');
       const bgColor = (s.bgColor || '').toString().trim();
       if (bgColor) slide.style.setProperty('--bg-color', bgColor);
 
