@@ -107,7 +107,7 @@
       background:
         linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.65) 72%, rgba(0,0,0,.88) 100%),
         var(--bg-img);
-      background-size: cover;
+      background-size: var(--bg-fit, cover);
       background-position: center;
       transform: translate3d(0, calc(var(--parallax-y, 0px) * .6), 0) scale(var(--bg-scale, 1.08));
       filter: saturate(1.05) contrast(1.05);
@@ -426,6 +426,10 @@
       // Background image placeholder: set CSS variable with url()
       const bg = s.bg ? `url('${String(s.bg).replace(/'/g, "\\'")}')` : 'linear-gradient(135deg, #0b1220, #020617)';
       slide.style.setProperty('--bg-img', bg);
+      const fit = (s.fit || '').toString().trim();
+      if (fit) slide.style.setProperty('--bg-fit', fit);
+      const bgColor = (s.bgColor || '').toString().trim();
+      if (bgColor) slide.style.setProperty('--bg-color', bgColor);
 
       const title = String(s.title || '').trim();
       const body = String(s.body || '').trim();
