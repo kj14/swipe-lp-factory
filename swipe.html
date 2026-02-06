@@ -4,665 +4,211 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Swipe (TikTok-style) demo</title>
-
+  <title>Swipe (native snap)</title>
   <style>
     :root{
-      --pad-x: 24px;
-      --bg:#05070c;
-      --text:#eef2ff;
-      --muted:rgba(238,242,255,.78);
-      --shadow:rgba(0,0,0,.55);
+      --bg:#000;
+      --text:#fff;
+      --muted:rgba(255,255,255,.72);
       --accent:#60a5fa;
       --safe-top: env(safe-area-inset-top);
       --safe-bottom: env(safe-area-inset-bottom);
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:var(--bg);
-      color:var(--text);
-      overflow:hidden; /* we handle the swipe */
-    }
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
 
-    /* iOS Safari: avoid overscroll/elastic causing accidental page scroll */
-    .app{
+    /* Native, fast scrolling */
+    .viewport{
       position:fixed;
       inset:0;
-      height:100vh;
-      width:100vw;
-      overflow:hidden;
-      background:var(--bg);
-      -webkit-user-select:none;
-      user-select:none;
-      touch-action:none; /* not fully honored on iOS, but helps elsewhere */
-    }
-
-    /* Top chrome */
-    .topbar{
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      padding: calc(10px + var(--safe-top)) 14px 10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      z-index:30;
-      pointer-events:none;
-    }
-    .topbar .pill{
-      pointer-events:auto;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 999px;
-      padding: 8px 12px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-    .topbar .brand{font-weight:650; font-size:13px; letter-spacing:.2px}
-    .topbar a{
-      color:var(--text);
-      text-decoration:none;
-      font-size:13px;
-      opacity:.92;
-    }
-
-    /* Track */
-    .viewport{
-      position:absolute;
-      inset:0;
-      overflow:hidden;
-    }
-
-    .track{
-      position:absolute;
-      top:0; left:0;
-      width:100%;
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
+      overflow-y:auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: y mandatory;
+      scroll-behavior:smooth;
+      background:#000;
     }
 
     .slide{
       position:relative;
-      width:100vw;
       height:100vh;
-      overflow:hidden;
-      contain: paint;
+      width:100vw;
+      scroll-snap-align:start;
+      scroll-snap-stop:always;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: calc(10px + var(--safe-top)) 10px calc(10px + var(--safe-bottom)) 10px;
       background:#000;
     }
 
-    /* Full-bleed background image placeholder */
-    .slide::before{
-      content:"";
-      position:absolute;
-      inset:-8%;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.65) 72%, rgba(0,0,0,.88) 100%),
-        var(--bg-img);
-      background-size: var(--bg-fit, cover);
-      background-position: center;
-      background-repeat: no-repeat;
-      transform: translate3d(0, calc(var(--parallax-y, 0px) * .6), 0) scale(var(--bg-scale, 1.08));
-      filter: none;
-      will-change: transform;
+    /* Image-first: never crop, always fully visible */
+    .imgWrap{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#000;
     }
-    /* Contain mode: never crop */
-    .slide[data-fit="contain"]::before{
-      background-size: calc(100% - var(--pad-x)) auto !important;
-      background-position: center !important;
-      background-repeat: no-repeat !important;
-      transform: none !important;
-      filter: none !important;
-    }
-    /* Contain mode: fill letterbox with blurred background */
-    .slide[data-fit="contain"]::after{
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: var(--bg-img);
-      background-size: cover;
-      background-position: center;
-      filter: blur(22px) saturate(1.05);
-      transform: scale(1.15);
-      opacity: .18;
-      z-index: -2;
-    }
-    .slide[data-fit="contain"] .overlay{ background: transparent !important; }
-
-
-
-
-    /* subtle vignette */
-    .slide::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background: radial-gradient(80% 50% at 50% 15%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 55%);
-      pointer-events:none;
+    .imgWrap img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      object-position:center;
+      image-rendering:auto;
+      background:#000;
     }
 
-    /* Overlay content */
+    /* Optional overlay (kept minimal, not dark) */
     .overlay{
       position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      padding: 18px 16px calc(18px + var(--safe-bottom));
-      z-index:20;
-      transform: translate3d(0, 0, 0);
+      left:12px;
+      right:12px;
+      bottom: calc(12px + var(--safe-bottom));
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:12px;
+      pointer-events:none;
     }
-
-    .card{
-      max-width: 720px;
-      background: rgba(0,0,0,.28);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 18px;
-      padding: 14px 14px 12px;
-      box-shadow: 0 18px 60px rgba(0,0,0,.35);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      transform: translate3d(0, calc(var(--content-y, 0px) * -0.08), 0) scale(var(--content-scale, 1));
-      transform-origin: left bottom;
-      will-change: transform;
-    }
-
-    .eyebrow{
+    .pill{
+      pointer-events:auto;
       display:inline-flex;
       align-items:center;
       gap:8px;
-      font-size:12px;
-      color: rgba(255,255,255,.86);
-      letter-spacing:.3px;
-      margin-bottom:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color:rgba(255,255,255,.95);
+      font-size:13px;
+      text-decoration:none;
     }
-    .eyebrow .dot{
-      width:8px;height:8px;border-radius:99px;background:var(--accent);
-      box-shadow: 0 0 0 6px rgba(96,165,250,.18);
-    }
-
-    h1{
-      margin:0;
-      font-size: 24px;
-      line-height: 1.2;
-      letter-spacing: .1px;
-      text-wrap: balance;
+    .pill.primary{
+      background: rgba(29,78,216,.92);
+      border-color: rgba(29,78,216,.92);
     }
 
-    p{
-      margin:10px 0 0;
-      font-size:14px;
-      line-height:1.65;
-      color: var(--muted);
-    }
-
-    .actions{
+    .topbar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      padding: calc(10px + var(--safe-top)) 12px 10px 12px;
       display:flex;
       align-items:center;
-      gap:10px;
-      margin-top: 12px;
-      flex-wrap:wrap;
+      justify-content:space-between;
+      gap:12px;
+      pointer-events:none;
+      z-index:5;
     }
+    .topbar .pill{pointer-events:auto}
 
-    .btn{
-      appearance:none;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(0,0,0,.22);
-      color: var(--text);
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 650;
-      letter-spacing: .2px;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .btn.primary{
-      background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(29,78,216,.95));
-      border-color: rgba(96,165,250,.55);
-      box-shadow: 0 14px 40px rgba(29,78,216,.25);
-    }
-
-    .btn.secondary{
-      font-weight: 550;
-      opacity: .92;
-    }
-
-    .hint{
-      margin-top:10px;
-      font-size:12px;
-      color: rgba(255,255,255,.62);
-    }
-
-    /* Progress indicator (right dots) */
     .progress{
-      position:absolute;
-      right: 10px;
-      top: 50%;
-      transform: translate3d(0,-50%,0);
+      position:fixed;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:6;
       display:flex;
       flex-direction:column;
       gap:8px;
-      z-index:40;
-      pointer-events:auto;
+      padding:10px 6px;
+      border-radius:999px;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-
-    .p-dot{
-      width: 6px;
-      height: 18px;
-      border-radius: 99px;
-      background: rgba(255,255,255,.25);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-    .p-dot.active{
-      background: rgba(255,255,255,.92);
-    }
-
-    /* Small center scrub bar for feedback */
-    .scrub{
-      position:absolute;
-      left: 50%;
-      bottom: calc(10px + var(--safe-bottom));
-      transform: translate3d(-50%,0,0);
-      width: 52px;
-      height: 4px;
-      border-radius: 99px;
-      background: rgba(255,255,255,.25);
-      z-index:50;
-      pointer-events:none;
-      opacity:.8;
-    }
-
-    /* Reduce motion support */
-    @media (prefers-reduced-motion: reduce){
-      .track{transition:none !important}
-      .slide::before{transition:none !important}
-      .card{transition:none !important}
-    }
+    .dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.25)}
+    .dot.active{background:var(--accent)}
   </style>
 </head>
 <body>
-  <div class="app" id="app" aria-label="Swipe demo">
-    <div class="topbar">
-      <div class="pill">
-        <div class="brand">Swipe demo</div>
-      </div>
-      <div class="pill">
-        <a href="index.html">← home</a>
-      </div>
-    </div>
-
-    <div class="viewport" id="viewport">
-      <div class="track" id="track" aria-live="polite"></div>
-    </div>
-
-    <div class="progress" id="progress" aria-hidden="true"></div>
-    <div class="scrub" aria-hidden="true"></div>
+  <div class="topbar">
+    <a class="pill" href="index.html">← home</a>
+    <div class="pill" id="counter">0/0</div>
   </div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <div class="viewport" id="viewport" aria-label="Swipe slides"></div>
 
 <script>
-(() => {
-  const DATA_URL = './slides.json';
-
-  /**
-   * Slides schema:
-   * { meta?: {...}, slides: Array<{id?, title, body, bg?, eyebrow?, cta?:{label, href}}>} 
-   */
-  const fallback = {
-    meta: { title: 'Swipe LP demo', direction: 'vertical' },
-    slides: [
-      { title: 'slides.json が見つからない場合のフォールバック', body: '同階層に slides.json を置くと自動で読み込みます。', bg: 'slides/01.jpg', eyebrow: 'Fallback', cta: { label: 'OK', href: '#'} }
-    ]
-  };
-
-  const app = document.getElementById('app');
+(async () => {
   const viewport = document.getElementById('viewport');
-  const track = document.getElementById('track');
   const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
 
-  // state
   let slides = [];
-  let idx = 0;
-
-  let height = window.innerHeight;
-  let dragging = false;
-  let startY = 0;
-  let lastY = 0;
-  let lastT = 0;
-  let velocity = 0;
-  let offsetY = 0; // drag offset px
-
-  let rafMove = 0;
-  let animating = false;
-
-  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-  function canVibrate(){
-    return typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  try{
+    const res = await fetch('./slides.json', {cache:'no-store'});
+    const json = await res.json();
+    slides = json.slides || [];
+    if(json?.meta?.title) document.title = json.meta.title;
+  }catch(e){
+    slides = [{bg:'', title:'slides.json load failed'}];
   }
 
-  function haptic(){
-    // Guarded: Vibration API is not available on iOS Safari. Safe no-op.
-    if (!canVibrate()) return;
-    try{ navigator.vibrate(8); }catch(_){ /* noop */ }
-  }
+  viewport.innerHTML = '';
+  progress.innerHTML = '';
 
-  function setTrack(y, withTransition){
-    if (prefersReduced) withTransition = false;
-    track.style.transition = withTransition ? 'transform 360ms cubic-bezier(.2,.9,.2,1)' : 'none';
-    track.style.transform = `translate3d(0, ${y}px, 0)`;
-  }
+  slides.forEach((s, i) => {
+    const sec = document.createElement('section');
+    sec.className = 'slide';
+    const wrap = document.createElement('div');
+    wrap.className = 'imgWrap';
 
-  function updateSlideFX(){
-    // Apply subtle parallax/scale based on offset while dragging
-    const frac = clamp(offsetY / height, -1, 1);
+    const img = document.createElement('img');
+    img.alt = s.title || `slide ${i+1}`;
+    img.loading = 'eager';
+    img.decoding = 'async';
+    if(s.bg) img.src = s.bg;
+    wrap.appendChild(img);
 
-    // current slide content should slightly scale down while pulling
-    const current = track.children[idx];
-    if (current){
-      current.style.setProperty('--parallax-y', `${offsetY}px`);
-      current.style.setProperty('--content-y', `${offsetY}px`);
-      const scale = 1 - Math.min(0.02, Math.abs(frac) * 0.02);
-      current.style.setProperty('--content-scale', String(scale));
-    }
+    sec.appendChild(wrap);
 
-    // neighbor slide: opposite parallax
-    const neighborIndex = frac < 0 ? idx + 1 : idx - 1;
-    const neighbor = track.children[neighborIndex];
-    if (neighbor){
-      neighbor.style.setProperty('--parallax-y', `${offsetY}px`);
-      neighbor.style.setProperty('--content-y', `${offsetY}px`);
-      const scale2 = 1 - Math.min(0.01, Math.abs(frac) * 0.01);
-      neighbor.style.setProperty('--content-scale', String(scale2));
-    }
-  }
+    // Minimal overlay: slide count + CTA (only if label exists)
+    const ctaLabel = (s.cta?.label || '').trim();
+    const ctaHref = (s.cta?.href || '#').trim();
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML = `
+      <div class="pill">${i+1}/${slides.length}</div>
+      ${ctaLabel ? `<a class="pill primary" href="${ctaHref}">${ctaLabel} →</a>` : ''}
+    `;
+    sec.appendChild(overlay);
 
-  function clearSlideFX(){
-    for (const el of track.children){
-      el.style.removeProperty('--parallax-y');
-      el.style.removeProperty('--content-y');
-      el.style.removeProperty('--content-scale');
-    }
-  }
+    viewport.appendChild(sec);
 
-  function updateProgress(){
-    [...progress.children].forEach((d,i)=>d.classList.toggle('active', i===idx));
-  }
-
-  function snapTo(newIdx, reason){
-    const target = clamp(newIdx, 0, slides.length - 1);
-    idx = target;
-    offsetY = 0;
-    clearSlideFX();
-    updateProgress();
-
-    const y = -idx * height;
-    animating = true;
-    setTrack(y, true);
-
-    if (reason !== 'init') haptic();
-
-    // clear animating flag after transition
-    window.setTimeout(() => { animating = false; }, prefersReduced ? 0 : 380);
-  }
-
-  function onResize(){
-    height = window.innerHeight;
-    // keep the current slide aligned
-    setTrack(-idx * height, false);
-  }
-
-  async function loadData(){
-    try{
-      const res = await fetch(DATA_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error(String(res.status));
-      const json = await res.json();
-      return json;
-    }catch(e){
-      console.warn('Failed to load slides.json, using fallback:', e);
-      return fallback;
-    }
-  }
-
-  function renderSlides(data){
-    slides = (data && data.slides) ? data.slides : fallback.slides;
-
-    document.title = (data && data.meta && data.meta.title) ? data.meta.title : document.title;
-
-    track.innerHTML = '';
-    progress.innerHTML = '';
-
-    slides.forEach((s, i) => {
-      const slide = document.createElement('section');
-      slide.className = 'slide';
-
-      // Background image placeholder: set CSS variable with url()
-      const bg = s.bg ? `url('${String(s.bg).replace(/'/g, "\\'")}')` : 'linear-gradient(135deg, #0b1220, #020617)';
-      slide.style.setProperty('--bg-img', bg);
-      const fit = (s.fit || '').toString().trim();
-      if (fit) slide.style.setProperty('--bg-fit', fit);
-      if (fit === 'contain') slide.setAttribute("data-fit","contain");
-      const bgColor = (s.bgColor || '').toString().trim();
-      if (bgColor) slide.style.setProperty('--bg-color', bgColor);
-
-      const title = String(s.title || '').trim();
-      const body = String(s.body || '').trim();
-      const eyebrow = String(s.eyebrow || '').trim();
-      const hasText = (title + body + eyebrow).length > 0;
-
-      const ctaHref = (s.cta && s.cta.href) ? String(s.cta.href).trim() : '';
-      const ctaLabel = (s.cta && s.cta.label) ? String(s.cta.label).trim() : '';
-      const showCta = ctaLabel.length > 0;
-
-      const showCard = hasText || showCta;
-
-      slide.innerHTML = `
-        <div class="overlay">
-          ${showCard ? `
-          <div class="card">
-            ${hasText ? `
-            <div class="eyebrow"><span class="dot"></span><span>${escapeHtml(eyebrow || 'Swipe')}</span></div>
-            <h1>${escapeHtml(title)}</h1>
-            <p>${escapeHtml(body)}</p>
-            ` : ''}
-            ${showCta ? `
-            <div class="actions">
-              <a class="btn primary" href="${escapeAttr(ctaHref || '#cta')}" data-cta="1" data-idx="${i}">
-                ${escapeHtml(ctaLabel)}
-                <span aria-hidden="true">→</span>
-              </a>
-              <button class="btn secondary" type="button" data-copy="1" data-idx="${i}">このスライド内容をコピー</button>
-            </div>
-            ` : ''}
-            <div class="hint">上にスワイプ / 下にスワイプ（キーボード：↑↓）</div>
-          </div>
-          ` : ''}
-        </div>
-      `;
-
-      track.appendChild(slide);
-
-      const d = document.createElement('div');
-      d.className = 'p-dot' + (i === 0 ? ' active' : '');
-      d.title = `Slide ${i+1}`;
-      d.addEventListener('click', () => snapTo(i, 'dot'));
-      progress.appendChild(d);
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.addEventListener('click', () => {
+      viewport.scrollTo({top: i * window.innerHeight, behavior:'smooth'});
     });
+    progress.appendChild(d);
+  });
 
-    idx = clamp(idx, 0, slides.length - 1);
-    setTrack(-idx * height, false);
-    updateProgress();
+  function setActive(){
+    const i = Math.round(viewport.scrollTop / window.innerHeight);
+    const idx = Math.max(0, Math.min(slides.length-1, i));
+    [...progress.children].forEach((d,j)=>d.classList.toggle('active', j===idx));
+    counter.textContent = `${idx+1}/${slides.length}`;
   }
 
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll('&','&amp;')
-      .replaceAll('<','&lt;')
-      .replaceAll('>','&gt;')
-      .replaceAll('"','&quot;')
-      .replaceAll("'",'&#39;');
-  }
-  function escapeAttr(s){
-    // conservative
-    return escapeHtml(s).replaceAll(/\s/g, '%20');
-  }
+  viewport.addEventListener('scroll', () => {
+    // rAF throttle
+    if(viewport._raf) return;
+    viewport._raf = requestAnimationFrame(() => {
+      viewport._raf = 0;
+      setActive();
+    });
+  }, {passive:true});
 
-  function commitMove(){
-    // decide where to snap based on distance + velocity
-    const frac = offsetY / height;
-
-    // velocity threshold (px/ms) + distance threshold
-    const fast = Math.abs(velocity) > 0.75;
-    const far = Math.abs(frac) > 0.18;
-
-    let nextIdx = idx;
-    if (fast || far){
-      // dragging up => go next
-      if (offsetY < 0) nextIdx = idx + 1;
-      if (offsetY > 0) nextIdx = idx - 1;
-    }
-    snapTo(nextIdx, 'swipe');
-  }
-
-  function moveTo(yPx){
-    // Rubber-band at edges
-    const atTop = idx === 0 && yPx > 0;
-    const atBottom = idx === slides.length - 1 && yPx < 0;
-    let y = yPx;
-    if (atTop || atBottom){
-      y = yPx * 0.35;
-    }
-
-    offsetY = y;
-    const base = -idx * height;
-    setTrack(base + y, false);
-    updateSlideFX();
-  }
-
-  function onTouchStart(e){
-    if (animating) return;
-    if (!e.touches || e.touches.length !== 1) return;
-    dragging = true;
-
-    startY = e.touches[0].clientY;
-    lastY = startY;
-    lastT = performance.now();
-    velocity = 0;
-    offsetY = 0;
-
-    // stop ongoing transition immediately
-    setTrack(-idx * height, false);
-  }
-
-  function onTouchMove(e){
-    if (!dragging) return;
-    // prevent iOS page scroll
-    e.preventDefault();
-
-    const y = e.touches[0].clientY;
-    const now = performance.now();
-    const dy = y - startY;
-
-    // velocity smoothing
-    const dt = Math.max(1, now - lastT);
-    const v = (y - lastY) / dt;
-    velocity = velocity * 0.75 + v * 0.25;
-    lastY = y;
-    lastT = now;
-
-    if (!rafMove){
-      rafMove = requestAnimationFrame(() => {
-        rafMove = 0;
-        moveTo(dy);
-      });
-    }
-  }
-
-  function onTouchEnd(){
-    if (!dragging) return;
-    dragging = false;
-    commitMove();
-  }
-
-  function onWheel(e){
-    // desktop trackpad: only when not dragging
-    if (animating) return;
-    // If the user scrolls, interpret as vertical swipe.
-    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-    if (Math.abs(e.deltaY) < 24) return;
-    snapTo(idx + (e.deltaY > 0 ? 1 : -1), 'wheel');
-  }
-
-  function onKeydown(e){
-    if (e.key === 'ArrowDown' || e.key === 'PageDown') snapTo(idx + 1, 'key');
-    if (e.key === 'ArrowUp' || e.key === 'PageUp') snapTo(idx - 1, 'key');
-  }
-
-  function onClick(e){
-    const ctaEl = e.target.closest && e.target.closest('[data-cta]');
-    if (ctaEl){
-      const i = Number(ctaEl.getAttribute('data-idx') || '0');
-      console.log('cta_click', { idx: i, id: slides[i] && slides[i].id });
-      // keep default link behavior
-      return;
-    }
-
-    const copyEl = e.target.closest && e.target.closest('[data-copy]');
-    if (copyEl){
-      const i = Number(copyEl.getAttribute('data-idx') || '0');
-      const s = slides[i] || {};
-      const txt = `${s.title || ''}\n\n${s.body || ''}`.trim();
-      copyToClipboard(txt);
-    }
-  }
-
-  async function copyToClipboard(txt){
-    try{
-      await navigator.clipboard.writeText(txt);
-      // lightweight feedback (avoid alert for mobile flow)
-      haptic();
-      console.log('copied');
-    }catch(_){
-      // fallback: prompt
-      window.prompt('Copy this text:', txt);
-    }
-  }
-
-  async function init(){
-    const data = await loadData();
-    renderSlides(data);
-    snapTo(0, 'init');
-  }
-
-  // listeners
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', () => window.setTimeout(onResize, 250));
-
-  // iOS requires passive:false to allow preventDefault
-  app.addEventListener('touchstart', onTouchStart, { passive: true });
-  app.addEventListener('touchmove', onTouchMove, { passive: false });
-  app.addEventListener('touchend', onTouchEnd, { passive: true });
-  app.addEventListener('touchcancel', onTouchEnd, { passive: true });
-
-  window.addEventListener('wheel', onWheel, { passive: true });
-  window.addEventListener('keydown', onKeydown);
-  window.addEventListener('click', onClick);
-
-  init();
+  window.addEventListener('resize', setActive);
+  setActive();
 })();
 </script>
 </body>
