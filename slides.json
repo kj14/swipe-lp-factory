@@ -15,7 +15,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#f0f1f5"
     },
     {
       "id": "nb02",
@@ -28,7 +28,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#ecf0f4"
     },
     {
       "id": "nb03",
@@ -41,7 +41,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#eeedf2"
     },
     {
       "id": "nb04",
@@ -54,7 +54,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#efeff3"
     },
     {
       "id": "nb05",
@@ -67,7 +67,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#eeedf2"
     },
     {
       "id": "nb06",
@@ -80,7 +80,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#ededf1"
     },
     {
       "id": "nb07",
@@ -93,7 +93,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#f0f1f5"
     },
     {
       "id": "nb08",
@@ -106,7 +106,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#f0f1f5"
     },
     {
       "id": "nb09",
@@ -119,7 +119,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#f0eff4"
     },
     {
       "id": "nb10",
@@ -132,7 +132,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#efeff4"
     },
     {
       "id": "nb11",
@@ -145,7 +145,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#efebed"
     },
     {
       "id": "nb12",
@@ -158,7 +158,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#e6c7ba"
     },
     {
       "id": "nb13",
@@ -171,7 +171,7 @@
         "href": "#"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#f0cfc4"
     },
     {
       "id": "nb14",
@@ -184,7 +184,7 @@
         "href": "#cta"
       },
       "fit": "contain",
-      "bgColor": "#000"
+      "bgColor": "#e9edf0"
     }
   ]
 }
