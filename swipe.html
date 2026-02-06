@@ -114,6 +114,15 @@
       filter: none;
       will-change: transform;
     }
+    /* Contain mode: never crop */
+    .slide[data-fit="contain"]::before{
+      background-size: contain !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      transform: none !important;
+      filter: none !important;
+    }
+
 
     /* subtle vignette */
     .slide::after{
