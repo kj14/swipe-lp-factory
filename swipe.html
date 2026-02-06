@@ -2,122 +2,363 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>/swipe demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Swipe LP (TikTok-like demo)</title>
   <style>
-    :root{--bg:#0b0f14;--card:#0f172a;--text:#e5e7eb;--muted:#9ca3af;--accent:#60a5fa;}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text);}
-    .top{position:sticky;top:0;backdrop-filter: blur(10px);background:rgba(11,15,20,.7);border-bottom:1px solid #1f2937;}
-    .top .wrap{max-width:980px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-    .top a{color:var(--accent);text-decoration:none;font-size:14px}
-    .wrap{max-width:980px;margin:0 auto;padding:18px 16px;}
-    .stage{background:var(--card);border:1px solid #1f2937;border-radius:16px;overflow:hidden;}
-    .slide{display:none;padding:22px;min-height:52vh;}
-    .slide.active{display:block;}
-    h1{margin:0 0 10px;font-size:22px;}
-    p{margin:0;color:var(--muted);line-height:1.6;}
-    .img{margin-top:14px;background:#0b1220;border:1px dashed #334155;border-radius:14px;height:260px;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;}
-    .ctrl{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px;}
-    button{appearance:none;border:1px solid #334155;background:#0b1220;color:var(--text);padding:10px 12px;border-radius:12px;font-size:14px;}
-    button.primary{background:#1d4ed8;border-color:#1d4ed8;}
-    button:disabled{opacity:.4}
-    .dots{display:flex;gap:6px;align-items:center;justify-content:center;flex:1;}
-    .dot{width:8px;height:8px;border-radius:50%;background:#334155;}
-    .dot.active{background:var(--accent)}
-    .cta{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;}
+    :root{
+      --bg:#000;
+      --text:#fff;
+      --muted:rgba(255,255,255,.78);
+      --muted2:rgba(255,255,255,.55);
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --accent:#60a5fa;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background: var(--bg);
+      color: var(--text);
+      overscroll-behavior: none;
+      touch-action: none; /* we'll handle swipe */
+    }
+
+    /* Stage: full screen */
+    .stage{
+      position:fixed;
+      inset:0;
+      overflow:hidden;
+      background:#000;
+    }
+    .track{
+      position:absolute;
+      inset:0;
+      will-change: transform;
+      transform: translate3d(0,0,0);
+    }
+
+    .slide{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-start;
+      padding: calc(16px + var(--safe-top)) 16px calc(20px + var(--safe-bottom)) 16px;
+      overflow:hidden;
+      background:#000;
+    }
+
+    .bg{
+      position:absolute;
+      inset:-20px; /* bleed for parallax */
+      background: #111;
+      background-size: cover;
+      background-position: center;
+      transform: translate3d(0,0,0) scale(1.05);
+      will-change: transform;
+      filter: saturate(1.05) contrast(1.05);
+    }
+    .shade{
+      position:absolute;
+      inset:0;
+      background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,.25) 40%, rgba(0,0,0,.15));
+      pointer-events:none;
+    }
+
+    .content{
+      position:relative;
+      z-index:2;
+      max-width: 720px;
+      text-shadow: 0 2px 14px rgba(0,0,0,.55);
+    }
+    .eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px}
+    h1{margin:0 0 10px;font-size:28px;line-height:1.15;}
+    p{margin:0 0 14px;color:var(--muted);line-height:1.55;font-size:15px}
+
+    .ctaRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(0,0,0,.35);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size:14px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+    .btn.primary{background: rgba(29,78,216,.92); border-color: rgba(29,78,216,.92);}
+
+    /* UI overlays */
+    .topbar{
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      padding: calc(10px + var(--safe-top)) 14px 10px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      z-index:5;
+      pointer-events:none;
+    }
+    .topbar a{pointer-events:auto;color:rgba(255,255,255,.9);text-decoration:none;font-size:14px}
+    .pill{pointer-events:auto;display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);backdrop-filter: blur(10px);}
+
+    .progress{
+      position:absolute;
+      right:12px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index:6;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:10px 6px;
+      border-radius:999px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+    }
+    .dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.25)}
+    .dot.active{background: var(--accent)}
+
+    .hint{
+      position:absolute;
+      left:50%;
+      bottom: calc(10px + var(--safe-bottom));
+      transform: translateX(-50%);
+      z-index:7;
+      font-size:12px;
+      color: rgba(255,255,255,.7);
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      padding: 8px 10px;
+      backdrop-filter: blur(10px);
+      pointer-events:none;
+    }
+
+    @media (min-width: 900px){
+      h1{font-size:34px}
+      p{font-size:16px}
+    }
   </style>
 </head>
 <body>
-  <div class="top">
-    <div class="wrap">
-      <div>Swipe demo</div>
-      <div style="display:flex;gap:12px;align-items:center">
-        <a href="index.html">← home</a>
-      </div>
+  <div class="stage" id="stage">
+    <div class="topbar">
+      <a class="pill" href="index.html">← home</a>
+      <div class="pill" id="counter">0/0</div>
     </div>
-  </div>
 
-  <div class="wrap">
-    <div class="stage" id="stage"></div>
-    <div class="ctrl">
-      <button id="prev">← Prev</button>
-      <div class="dots" id="dots"></div>
-      <button id="next" class="primary">Next →</button>
-    </div>
-    <div class="cta">
-      <button class="primary" id="cta">CTA: 今すぐ相談する（ダミー）</button>
-      <button id="copy">このスライド内容をコピー</button>
-    </div>
+    <div class="progress" id="progress" aria-label="progress"></div>
+    <div class="track" id="track" aria-label="slides"></div>
+    <div class="hint">↑↓ スワイプ / クリックで次へ</div>
   </div>
 
 <script>
-  // Minimal slide data (placeholder). Next: generate this from scenario JSON.
-  const slides = [
-    {title: 'スワイプLPは「スライド」だった', body: 'LPをスライドとして組み立てれば、画像生成と相性が良い。まずは最小の型に流し込む。', img: 'slides/01.jpg'},
-    {title: '打ち合わせ→3時間でLP', body: 'シナリオ→画像(7〜12枚)→テンプレ差し替えで公開。テイスト違いも複製してABテストへ。', img: 'slides/02.jpg'},
-    {title: '計測して勝ちパターンを固定', body: 'CTAクリック/到達率などを追い、勝ち案を固定→次の実験へ。週次レポも自動化。', img: 'slides/03.jpg'},
-    {title: 'まずはデモから', body: 'ここは雛形。画像はプレースホルダ。nanobanana生成画像に差し替えたら完成度が跳ねる。', img: 'slides/04.jpg'},
-  ];
-
   const stage = document.getElementById('stage');
-  const dots = document.getElementById('dots');
-  const prev = document.getElementById('prev');
-  const next = document.getElementById('next');
-  const cta = document.getElementById('cta');
-  const copyBtn = document.getElementById('copy');
+  const track = document.getElementById('track');
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
 
-  let idx = 0;
+  const state = {
+    slides: [],
+    index: 0,
+    y: 0,
+    startY: 0,
+    startTime: 0,
+    dragging: false,
+    height: window.innerHeight,
+  };
 
-  function render(){
-    stage.innerHTML = '';
-    dots.innerHTML = '';
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-    slides.forEach((s,i)=>{
-      const el = document.createElement('section');
-      el.className = 'slide' + (i===idx?' active':'');
-      el.innerHTML = `
-        <h1>${s.title}</h1>
-        <p>${s.body}</p>
-        <div class="img">${s.img}（ここに画像が入る）</div>
-      `;
-      stage.appendChild(el);
-
-      const d = document.createElement('div');
-      d.className = 'dot' + (i===idx?' active':'');
-      d.addEventListener('click',()=>{idx=i;render();});
-      dots.appendChild(d);
-    });
-
-    prev.disabled = idx===0;
-    next.disabled = idx===slides.length-1;
+  function setCounter(){
+    counter.textContent = `${state.index+1}/${state.slides.length}`;
   }
 
-  prev.addEventListener('click',()=>{ if(idx>0){idx--;render();}});
-  next.addEventListener('click',()=>{ if(idx<slides.length-1){idx++;render();}});
+  function buildProgress(){
+    progress.innerHTML='';
+    state.slides.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.className='dot'+(i===state.index?' active':'');
+      d.addEventListener('click',()=>goTo(i));
+      progress.appendChild(d);
+    });
+  }
 
-  // Arrow keys
-  window.addEventListener('keydown',(e)=>{
-    if(e.key==='ArrowLeft') prev.click();
-    if(e.key==='ArrowRight') next.click();
-  });
+  function slideEl(s){
+    const el=document.createElement('section');
+    el.className='slide';
+    const bg=document.createElement('div');
+    bg.className='bg';
+    if(s.bg){ bg.style.backgroundImage = `url(${s.bg})`; }
+    const shade=document.createElement('div');
+    shade.className='shade';
 
-  cta.addEventListener('click',()=>{
-    console.log('cta_click', {idx});
-    alert('CTA clicked (dummy)');
-  });
+    const content=document.createElement('div');
+    content.className='content';
+    content.innerHTML = `
+      <div class="eyebrow">${(s.eyebrow||'').replace(/</g,'&lt;')}</div>
+      <h1>${(s.title||'').replace(/</g,'&lt;')}</h1>
+      <p>${(s.body||'').replace(/</g,'&lt;')}</p>
+      <div class="ctaRow">
+        <button class="btn primary" data-cta>${(s.cta?.label || '今すぐ相談する').replace(/</g,'&lt;')}</button>
+        <button class="btn" data-copy>コピー</button>
+      </div>
+    `;
 
-  copyBtn.addEventListener('click', async ()=>{
-    const s = slides[idx];
-    const txt = `${s.title}\n\n${s.body}`;
-    try{
-      await navigator.clipboard.writeText(txt);
-      alert('Copied');
-    }catch(e){
-      alert(txt);
+    el.appendChild(bg);
+    el.appendChild(shade);
+    el.appendChild(content);
+
+    el.querySelector('[data-cta]').addEventListener('click',()=>{
+      // Minimal analytics hook
+      console.log('cta_click', { index: state.index, id: s.id });
+      if(s.cta?.href && s.cta.href !== '#') window.location.href = s.cta.href;
+      else alert('CTA clicked (dummy)');
+    });
+    el.querySelector('[data-copy]').addEventListener('click', async ()=>{
+      const txt = `${s.title||''}\n\n${s.body||''}`;
+      try{ await navigator.clipboard.writeText(txt); alert('Copied'); }
+      catch(e){ alert(txt); }
+    });
+
+    // click anywhere to go next
+    el.addEventListener('click', (e)=>{
+      if(e.target.closest('button')) return;
+      next();
+    });
+
+    return el;
+  }
+
+  function render(){
+    state.height = window.innerHeight;
+    track.innerHTML='';
+    state.slides.forEach(s=>track.appendChild(slideEl(s)));
+    // layout vertical
+    [...track.children].forEach((el,i)=>{ el.style.transform = `translate3d(0, ${i*state.height}px, 0)`; });
+    state.y = -state.index * state.height;
+    applyTransform(true);
+    buildProgress();
+    setCounter();
+  }
+
+  function applyTransform(snap=false){
+    if(snap){
+      track.style.transition = 'transform 320ms cubic-bezier(.2,.9,.2,1)';
+    }else{
+      track.style.transition = 'none';
     }
+    track.style.transform = `translate3d(0, ${state.y}px, 0)`;
+    // subtle parallax: adjust each bg based on distance
+    const els = track.children;
+    for(let i=0;i<els.length;i++){
+      const dy = (i*state.height + state.y);
+      const bg = els[i].querySelector('.bg');
+      const t = clamp(Math.abs(dy)/state.height, 0, 1);
+      bg.style.transform = `translate3d(0, ${dy*0.08}px, 0) scale(${1.05 + t*0.02})`;
+    }
+    // progress dots
+    [...progress.children].forEach((d,i)=>d.classList.toggle('active', i===state.index));
+    setCounter();
+  }
+
+  function vibrate(){
+    try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
+  }
+
+  function goTo(i){
+    const nextIdx = clamp(i, 0, state.slides.length-1);
+    if(nextIdx===state.index) return;
+    state.index = nextIdx;
+    state.y = -state.index * state.height;
+    applyTransform(true);
+    vibrate();
+  }
+  function next(){ goTo(state.index+1); }
+  function prev(){ goTo(state.index-1); }
+
+  // Touch handling (iOS Safari): use non-passive listener to prevent scroll
+  function onDown(clientY){
+    state.dragging = true;
+    state.startY = clientY;
+    state.startTime = performance.now();
+    state.startOffset = state.y;
+    track.style.transition = 'none';
+  }
+  function onMove(clientY){
+    if(!state.dragging) return;
+    const dy = clientY - state.startY;
+    state.y = state.startOffset + dy;
+    // rubber band at edges
+    const minY = -(state.slides.length-1)*state.height;
+    const maxY = 0;
+    if(state.y > maxY) state.y = maxY + (state.y-maxY)*0.28;
+    if(state.y < minY) state.y = minY + (state.y-minY)*0.28;
+    applyTransform(false);
+  }
+  function onUp(clientY){
+    if(!state.dragging) return;
+    state.dragging=false;
+    const dy = clientY - state.startY;
+    const dt = Math.max(1, performance.now() - state.startTime);
+    const v = dy / dt; // px/ms
+
+    const threshold = state.height * 0.18;
+    if(dy < -threshold || v < -0.6) next();
+    else if(dy > threshold || v > 0.6) prev();
+    else {
+      // snap back
+      state.y = -state.index * state.height;
+      applyTransform(true);
+    }
+  }
+
+  stage.addEventListener('touchstart', (e)=>{ if(e.touches.length!==1) return; onDown(e.touches[0].clientY); }, {passive:false});
+  stage.addEventListener('touchmove', (e)=>{ if(!state.dragging) return; e.preventDefault(); onMove(e.touches[0].clientY); }, {passive:false});
+  stage.addEventListener('touchend', (e)=>{ const y = (e.changedTouches[0]||{}).clientY ?? state.startY; onUp(y); }, {passive:true});
+
+  stage.addEventListener('mousedown', (e)=>{ onDown(e.clientY); });
+  window.addEventListener('mousemove', (e)=>{ onMove(e.clientY); });
+  window.addEventListener('mouseup', (e)=>{ onUp(e.clientY); });
+
+  // Keys
+  window.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowDown' || e.key==='PageDown') next();
+    if(e.key==='ArrowUp' || e.key==='PageUp') prev();
   });
 
-  render();
+  window.addEventListener('resize', ()=>{
+    // keep same index after resize
+    render();
+  });
+
+  async function boot(){
+    try{
+      const res = await fetch('./slides.json', {cache:'no-store'});
+      const json = await res.json();
+      state.slides = json.slides || [];
+    }catch(e){
+      state.slides = [
+        {id:'fallback', title:'slides.json が読めません', body:'GitHub Pages反映待ちか、JSONが壊れてる可能性。', bg:'', eyebrow:'error', cta:{label:'戻る', href:'index.html'}},
+      ];
+    }
+    if(!state.slides.length){
+      state.slides = [{id:'empty', title:'No slides', body:'slides.json に slides[] を入れてください', bg:''}];
+    }
+    render();
+  }
+
+  boot();
 </script>
 </body>
 </html>

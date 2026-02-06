@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "title": "Swipe LP demo",
+    "direction": "vertical"
+  },
+  "slides": [
+    {
+      "id": "intro",
+      "title": "スワイプLPは“フルスクリーン”で刺さる",
+      "body": "1枚1メッセージ。縦スワイプでテンポよく理解→CTAへ。画像はフルブリードで没入感を作る。",
+      "bg": "slides/01.jpg",
+      "eyebrow": "Swipe LP Factory",
+      "cta": { "label": "今すぐ相談する", "href": "#cta" }
+    },
+    {
+      "id": "process",
+      "title": "打ち合わせ→3時間で公開まで",
+      "body": "シナリオ→画像(7〜12枚)→テンプレ差し替え。テイスト違いを複製してABテストへ。",
+      "bg": "slides/02.jpg",
+      "eyebrow": "Speed",
+      "cta": { "label": "制作フローを見る", "href": "#flow" }
+    },
+    {
+      "id": "measure",
+      "title": "到達率・CTAで勝ちを固定",
+      "body": "スワイプ到達率 / CTAクリック / 離脱点を可視化。勝ち案を固定して次の実験へ。",
+      "bg": "slides/03.jpg",
+      "eyebrow": "Measure",
+      "cta": { "label": "計測の例を見る", "href": "#metrics" }
+    },
+    {
+      "id": "demo",
+      "title": "このHTMLは雛形。画像差し替えで完成",
+      "body": "slides.json を差し替えるだけで内容が更新されます。背景画像は bg にパスを指定。",
+      "bg": "slides/04.jpg",
+      "eyebrow": "Template",
+      "cta": { "label": "テンプレを使う", "href": "#use" }
+    }
+  ]
+}
