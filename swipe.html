@@ -8,6 +8,7 @@
 
   <style>
     :root{
+      --pad-x: 24px;
       --bg:#05070c;
       --text:#eef2ff;
       --muted:rgba(238,242,255,.78);
@@ -116,7 +117,7 @@
     }
     /* Contain mode: never crop */
     .slide[data-fit="contain"]::before{
-      background-size: contain !important;
+      background-size: calc(100% - var(--pad-x)) auto !important;
       background-position: center !important;
       background-repeat: no-repeat !important;
       transform: none !important;
@@ -132,9 +133,11 @@
       background-position: center;
       filter: blur(22px) saturate(1.05);
       transform: scale(1.15);
-      opacity: .35;
+      opacity: .18;
       z-index: -2;
     }
+    .slide[data-fit="contain"] .overlay{ background: transparent !important; }
+
 
 
 
