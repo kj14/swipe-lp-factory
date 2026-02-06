@@ -122,6 +122,20 @@
       transform: none !important;
       filter: none !important;
     }
+    /* Contain mode: fill letterbox with blurred background */
+    .slide[data-fit="contain"]::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: var(--bg-img);
+      background-size: cover;
+      background-position: center;
+      filter: blur(22px) saturate(1.05);
+      transform: scale(1.15);
+      opacity: .35;
+      z-index: -2;
+    }
+
 
 
     /* subtle vignette */
