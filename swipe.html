@@ -207,6 +207,37 @@
   viewport.innerHTML = '';
   progress.innerHTML = '';
 
+
+  // --- Minimal local analytics (no external network) ---
+  const ANALYTICS_KEY = 'swipe_lp_events_v1';
+  const MAX_EVENTS = 200;
+  let lastIdx = -1;
+
+  function safeParseJson(s, fallback){
+    try{ return JSON.parse(s); }catch(_){ return fallback; }
+  }
+
+  function loadEvents(){
+    if (typeof localStorage === 'undefined') return [];
+    return safeParseJson(localStorage.getItem(ANALYTICS_KEY) || '[]', []);
+  }
+
+  function saveEvents(events){
+    if (typeof localStorage === 'undefined') return;
+    try{ localStorage.setItem(ANALYTICS_KEY, JSON.stringify(events.slice(-MAX_EVENTS))); }catch(_){ /* ignore */ }
+  }
+
+  function track(name, payload){
+    const ev = { ts: new Date().toISOString(), name, payload: payload || {} };
+    // Console only + localStorage; no external calls.
+    try{ console.log('[track]', ev.name, ev.payload); }catch(_){ /* noop */ }
+    const events = loadEvents();
+    events.push(ev);
+    saveEvents(events);
+  }
+
+  track('lp_view', { title: document.title, ua: navigator.userAgent });
+
   slides.forEach((s, i) => {
     const sec = document.createElement('section');
     sec.className = 'slide';
@@ -258,11 +289,35 @@
     });
   });
 
+
+
+  // CTA click tracking (overlay CTA + header CTA)
+  viewport.addEventListener('click', (e) => {
+    const a = e.target && (e.target.closest ? e.target.closest('a') : null);
+    if (!a) return;
+    if (a.classList && a.classList.contains('primary')){
+      track('cta_click', { href: a.getAttribute('href') || '', text: (a.textContent || '').trim(), idx: lastIdx });
+    }
+  }, {passive:true});
+
+  const headerCta = document.getElementById('headerCta');
+  if (headerCta){
+    headerCta.addEventListener('click', () => {
+      track('cta_click', { href: headerCta.getAttribute('href') || '', text: (headerCta.textContent || '').trim(), idx: lastIdx, location: 'header' });
+    }, {passive:true});
+  }
+
   function setActive(){
     const i = Math.round(viewport.scrollTop / window.innerHeight);
     const idx = Math.max(0, Math.min(slides.length-1, i));
     [...progress.children].forEach((d,j)=>d.classList.toggle('active', j===idx));
     counter.textContent = `${idx+1}/${slides.length}`;
+
+    if (idx !== lastIdx){
+      lastIdx = idx;
+      const s = slides[idx] || {};
+      track('slide_view', { idx, id: s.id || null, bg: s.bg || null });
+    }
   }
 
   viewport.addEventListener('scroll', () => {
